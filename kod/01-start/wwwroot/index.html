@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="sv">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Chat: lab 1 (start)</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <main class="chat">
+    <header>
+      <h1>Chat</h1>
+      <span id="status" class="status status--off">Ej ansluten</span>
+    </header>
+
+    <ul id="messages" class="messages" aria-live="polite"></ul>
+
+    <form id="send-form" class="send">
+      <input id="username" type="text" placeholder="Ditt namn" autocomplete="off" required>
+      <input id="message" type="text" placeholder="Meddelande" autocomplete="off" required>
+      <button type="submit">Skicka</button>
+    </form>
+  </main>
+
+  <!-- SignalR:s JavaScript-klient. Ligger lokalt i wwwroot/lib så att labben fungerar utan internet. -->
+  <script src="lib/signalr.min.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>

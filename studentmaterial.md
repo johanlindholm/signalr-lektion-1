@@ -1,0 +1,281 @@
+# SignalR och säker kommunikation: labb
+
+Kurs: Datakommunikation och säkerhet
+Tid: eftermiddagen, du arbetar själv och läraren finns tillgänglig
+
+Idag bygger du en realtidschatt med SignalR, attackerar den och härdar den. Målet är inte att memorera metoder, utan att träna en vana: för varje steg i flödet, fråga dig vad servern litar på och vilket säkerhetsbeslut som måste fattas där.
+
+Arbeta i din egen takt. Fastnar du mer än några minuter, fråga läraren. Du behöver inte hinna allt, men gör stegen i ordning.
+
+Det här är kursens första pass. Termer som TLS, XSS och spoofing dyker upp idag, men de får sin riktiga genomgång i pass 3 (IT-säkerhet och krypto) och pass 5 (säker kommunikation). Idag räcker det att se vad som händer. Begreppslistan sist i dokumentet har korta förklaringar.
+
+## Dagens röda tråd
+
+Dagens fråga: hur får en server ut information till en klient i samma stund som något händer? Vi går igenom sju steg, och vid varje steg ställer vi samma fråga: vad litar servern på här, och vilket beslut måste den fatta? Det här är svaren, som referens.
+
+| Steg | Vad litar vi på | Beslut |
+|---|---|---|
+| HTTP | Allt i requesten skrivs av klienten | Kontrollera innan du agerar |
+| Polling | Klienten väljer hur ofta den frågar | Tål att någon frågar för ofta |
+| SSE | Servern pushar till den som öppnat strömmen | Vem får öppna, och vad får den se |
+| WebSocket | Klienten kan skicka vad som helst, när som helst | Kontroll per meddelande, i vår kod |
+| SignalR | Ramverket sköter transport och routing | Behörighet är vår sak, inte ramverkets |
+| Hub | Argumenten är klientens ord, Context är serverns | Identitet från Context, validera argumenten |
+| Säkerhet | Kryptering skyddar vägen, inte besluten | Vem, vad, till vem, hur mycket, hur ofta |
+
+Svaret är nästan alltid detsamma: servern litar på det den själv vet, inte på det klienten säger. Ställ frågan varje gång du skriver en metod som en klient kan anropa.
+
+---
+
+## Gruppövning på förmiddagen: para ihop app och teknik
+
+I par, fyra minuter, under den lärarledda delen. Vilken teknik passar för varje app? Flera svar kan vara rätt. Motivera med de tre frågorna: vem initierar, hur snabbt måste det fram, åt vilket håll går datan.
+
+Teknikerna: request/response, polling, SSE, WebSocket, SignalR.
+
+1. Chatt mellan användare
+2. Aktiekurser som tickar på en sida
+3. Statuskoll på ett bygge som tar tio minuter
+4. Lägg i varukorg och betala
+5. AI-chatt som skriver svaret ord för ord
+6. Multiplayer-spel eller gemensam whiteboard
+7. Notis "du har ett nytt meddelande", några per dag
+8. Sensor som rapporterar temperatur var tionde minut
+
+### Referens: fem sätt att få data till klienten, och ett ramverk
+
+| Teknik | Riktning | Styrka | Svaghet | Passar när |
+|---|---|---|---|---|
+| Request/response | klient frågar, server svarar | enkelt, cachebart, skalar | servern kan inte initiera | data behövs vid dina egna handlingar |
+| Polling | klient frågar regelbundet | enkelt, fungerar överallt | fördröjning, onödiga anrop | sekunder till minuter räcker |
+| Long polling | klient frågar, servern väntar med svaret | nära realtid över vanlig HTTP | en request per händelse, krångligt på servern | fallback när inget bättre går |
+| SSE (Server-Sent Events) | server till klient | enkelt, vanlig HTTP, auto-reconnect | en riktning, text | servern pushar, klienten svarar sällan |
+| WebSocket | båda håll | låg latens, binärt | egen hantering av anslutning och reconnect | båda sidor skickar ofta |
+| SignalR | båda håll, väljer transport | hub, grupper, reconnect, fallback | .NET-ekosystem, skalning kräver backplane | ASP.NET Core-app som behöver realtid |
+
+SignalR är inte en egen transport. Det är ett ramverk som väljer WebSocket, SSE eller long polling åt dig.
+
+Tre frågor för att välja:
+
+1. Behöver servern kunna skicka utan att klienten frågar? Nej: request/response.
+2. Räcker det om datan kommer inom sekunder till minuter? Ja: polling.
+3. Skickar klienten också ofta? Nej: SSE. Ja: WebSocket.
+
+Bygger du i ASP.NET Core och vill slippa anslutningshantering själv: SignalR.
+
+---
+
+## Gruppövning på förmiddagen: Hotjakt
+
+Den här gör ni i par under den lärarledda delen. Ingen dator, bara penna och papper. Ni tittar på koden nedan och svarar kort. Sedan tar vi upp svaren gemensamt.
+
+Koden har två sidor. Den övre körs i användarens webbläsare. Den nedre körs på servern. Det klienten skriver i `invoke` landar som argument i hub-metoden med samma namn.
+
+```js
+// Klient, körs i webbläsaren (app.js)
+await connection.invoke("SendMessage", "Alice", "Hej!");
+await connection.invoke("JoinGroup", "Administrators");
+```
+
+```csharp
+// Server (ChatHub.cs)
+public sealed class ChatHub : Hub
+{
+    public Task SendMessage(string username, string message)
+        => Clients.All.SendAsync("ReceiveMessage", username, message);
+
+    public Task JoinGroup(string groupName)
+        => Groups.AddToGroupAsync(Context.ConnectionId, groupName);
+}
+```
+
+(Förkortad. Den fullständiga hubben finns i `kod/02-svag-hub/ChatHub.cs`.)
+
+1. Vilka värden i anropen bestämmer klienten, och vilka sätter servern?
+2. Hur skulle du få ett meddelande att se ut som att det kommer från någon annan?
+3. Vem får se ett meddelande som skickas med `SendMessage`, och när blir det ett problem?
+4. Vad hindrar en klient från att skicka ett meddelande på 1 MB, eller tusen meddelanden i sekunden? Peka i koden.
+5. Vad av det här hindras av att trafiken är krypterad (https och wss)?
+
+Spara dina svar. Du känner igen dem i eftermiddagens attackövning.
+
+---
+
+## Innan du börjar
+
+Kör en gång:
+
+```bash
+dotnet --version           # 8.0 eller senare
+dotnet dev-certs https --trust
+```
+
+Det andra kommandot gör att `https://localhost` fungerar utan certifikatvarning. Hoppar du över det kommer anslutningen att misslyckas utan tydligt fel.
+
+Projekten ligger i `kod/`:
+
+- `01-start` är din utgångspunkt. Hubben är tom och har TODO:er.
+- `02-svag-hub` är en färdig men osäker version. Använd den bara om du kör fast, eller som attackmål.
+- `03-hardad-hub` är en referenslösning för härdningen. Kika först när du försökt själv.
+
+Starta ett projekt:
+
+```bash
+cd kod/01-start
+dotnet run
+```
+
+Öppna adressen som skrivs ut, till exempel `https://localhost:7101`.
+
+---
+
+## Lab 1: bygg chatten
+
+Öppna `01-start` i din editor. Fyll i de sju TODO:erna. De ligger i tre filer.
+
+I `Program.cs`:
+
+- TODO 1.1 registrera SignalR i DI-containern
+- TODO 1.3 mappa hubben till `/hubs/chat`
+
+I `ChatHub.cs`:
+
+- TODO 1.2 gör klassen till en Hub och skriv `SendMessage(string username, string message)` som skickar vidare till alla anslutna via klientmetoden `ReceiveMessage`
+
+I `wwwroot/app.js`:
+
+- TODO 1.4 skapa anslutningen mot `/hubs/chat`
+- TODO 1.5 registrera en handler för `ReceiveMessage`
+- TODO 1.6 anropa `SendMessage` när formuläret skickas
+- TODO 1.7 starta anslutningen
+
+När chatten fungerar, ett steg till, i både `ChatHub.cs` och `app.js`:
+
+- TODO 1.8 lägg till gruppfunktionerna `JoinGroup` och `SendToGroup` i hubben, och handlerna `ReceiveGroupMessage` och `ReceiveSystem` i klienten. Sidan har inga knappar för grupper, du anropar dem från konsolen. Steget behövs för lab 2 och 3.
+
+Alla ledtrådar finns i filerna.
+
+### Klar när
+
+Du öppnar appen i två flikar, skriver i den ena och meddelandet syns i båda. Öppna sedan Developer Tools (F12), fliken Network, och hitta:
+
+1. `POST /hubs/chat/negotiate`
+2. WebSocket-anslutningen (filtrera på WS), statuskod 101
+3. de frames som skickas när du skriver ett meddelande
+
+Kör till sist `connection.invoke("JoinGroup", "General")` i konsolen och se att du får en systemrad tillbaka.
+
+Fundera: var används vanlig HTTP, och var tar den persistenta anslutningen över?
+
+### Om du kör fast
+
+Titta i tabellen sist i det här dokumentet. Kommer du ändå inte vidare, jämför med `02-svag-hub`, som är en fungerande version av precis det här steget.
+
+---
+
+## Lab 2: attackera din egen hub
+
+Nu vänder du verktygen mot din egen kod. Öppna appen i två flikar, öppna konsolen (F12, fliken Console). Anslutningen ligger i `window.connection`. Hann du inte med steg 1.8, kör i stället mot `02-svag-hub`, som har samma hål.
+
+Snuttarna finns i `kod/attacker/attacker.md`, numrerade som nedan. Kör dem en i taget. För varje attack, skriv ner tre rader:
+
+```text
+Vad jag som angripare skickade eller gjorde
+            ↓
+Vad servern litade på eller gjorde
+            ↓
+Vilken konsekvens det fick
+```
+
+Attackerna:
+
+1. Skicka ett meddelande som "Administrator". Vem valde avsändarnamnet?
+2. Låt den ena fliken gå med i gruppen "Administrators" som legitim admin. Gå sedan med från den andra fliken och skicka till gruppen som "admin". Frågade servern om lov?
+3. Skicka `<img src=x onerror=alert('xss')>` som meddelande. Vad händer, och varför?
+4. Skicka ett meddelande på 3000 tecken. Skicka sedan ett på 1 MB. Vad är skillnaden i utfall, och varför? (Det stora stänger anslutningen, ladda om sidan efteråt.)
+5. Skicka 1000 meddelanden i en loop. Vad stoppar det?
+
+Notera särskilt skillnaden i attack 4. Den ena går rakt igenom, den andra stoppas av en teknisk gräns i SignalR. Vad säger det om skillnaden mellan en teknisk gräns och en verksamhetsregel?
+
+---
+
+## Lab 3: härda hubben
+
+Nu täpper du till hålen du hittade. Gör dem i ordning. Efter varje fix, kör om motsvarande attack och kontrollera att den nu stoppas.
+
+1. Identitet från servern. Ta bort `username`-argumentet från `SendMessage`. Hämta i stället namnet från serverns kontext. Det förutsätter att användaren är inloggad. Titta i referenslösningen på hur en enkel inloggning sätter upp identiteten.
+2. Rätt mottagare. Fråga dig om varje meddelande verkligen ska gå till alla. Lär dig skillnaden mellan `Clients.All`, `Clients.Caller`, `Clients.Others`, `Clients.User` och `Clients.Group`.
+3. Grupprättigheter på servern. Låt inte klienten bestämma vilken grupp den får gå med i. Lägg kontrollen på servern.
+4. Kontroll vid varje känslig operation. Kontrollera behörigheten både när man går med i en grupp och när man skickar till den. En anslutning lever länge och rättigheter kan ändras.
+5. Domänvalidering. Inför en regel om att ett meddelande inte får vara tomt och högst till exempel 500 tecken. Det är något annat än den tekniska storleksgränsen.
+6. Rate limiting. Hindra att en klient kan spamma obegränsat.
+7. Säker rendering. Byt ut osäker DOM-rendering i klienten så att inkommande text visas som text, inte som HTML.
+
+### Klar när
+
+Du kör om minst tre av attackerna från lab 2 mot din härdade hub och visar att de nu stoppas. Du kan förklara, för varje fix, var beslutet fattas och varför det inte kan ligga hos klienten.
+
+Referenslösningen `03-hardad-hub` visar en möjlig väg. Den är inte en färdig produktionslösning, och `Program.cs` i den listar vad som fortfarande saknas.
+
+---
+
+## Stretch, om du blir klar
+
+- Bygg privata meddelanden med `Clients.User`. Se `SendPrivate` i referenslösningen.
+- Logga in som `admin` i referenslösningen och jämför med en vanlig användare. Vem släpps in i gruppen Administrators, och var bestäms det?
+- Läs kommentaren längst ner i `Program.cs` i referenslösningen och skriv en egen lista över vad som återstår innan något liknande får gå i produktion.
+
+---
+
+## Exit ticket
+
+Fylls i individuellt kl 15:45, efter labben, och lämnas till läraren innan du går. En till två meningar per fråga, det ska ta fem minuter. Det är ingen examination. Den visar läraren vad som landat och vad nästa pass behöver plocka upp.
+
+Namn: ______________________
+
+1. Förklara med en mening vad SignalR gör som WebSocket inte gör.
+2. Varifrån ska servern hämta vem användaren är, och varför inte från metodargumentet?
+3. Servern vet att det är Alice som anropar. Räcker det för att låta henne gå med i gruppen Administrators? Varför, eller varför inte?
+4. Med `Clients.All` får alla anslutna meddelandet. Ge ett exempel på när det är fel, och vad du väljer i stället.
+5. Trafiken är krypterad (wss). Nämn två saker som ändå kan gå fel i vår chatt.
+6. Vilken attack från lab 2 stoppade du i lab 3, och var i koden sitter kontrollen nu? Hann du inte dit: vilken skulle du stoppa först, och var?
+
+Vad är fortfarande oklart efter idag? Skriv en rad, även om det är "inget".
+
+---
+
+## Felsökning
+
+| Symptom | Trolig orsak | Fix |
+|---|---|---|
+| Certifikatvarning eller anslutning misslyckas direkt | dev-cert inte betrott | `dotnet dev-certs https --trust`, starta om webbläsaren |
+| `signalR is not defined` i konsolen | fel sökväg till klientbiblioteket | script-taggen ska peka på `lib/signalr.min.js` och ligga före `app.js` |
+| Anslutningen startar men inget syns | glömt registrera `connection.on("ReceiveMessage", ...)` | registrera handlern före `connection.start()` |
+| `Failed to invoke SendMessage` | metodnamnet matchar inte hubben | namnen måste vara exakt lika |
+| Bara avsändaren ser meddelandet | `Clients.Caller` i stället för `Clients.All` | rätta i hubben |
+| 401 efter att du lagt till `[Authorize]` | ingen inloggning gjord | logga in först, se referenslösningens klient |
+| `Context.User.Identity.Name` är null | ingen autentisering konfigurerad, eller claim saknas | se `Program.cs` i referensen |
+
+## Begreppslista
+
+| Begrepp | Kort förklaring |
+|---|---|
+| Realtid | Klienten får uppdateringar nära händelsen utan att ladda om |
+| Polling | Klienten frågar servern upprepade gånger efter ny data |
+| Long polling | Klienten frågar, servern håller svaret tills något händer, klienten frågar direkt igen |
+| SSE | Server-Sent Events. En HTTP-response som hålls öppen så att servern kan skicka händelser. En riktning, server till klient |
+| WebSocket | Protokoll för persistent dubbelriktad kommunikation |
+| SignalR | ASP.NET Core-ramverk för realtidskommunikation |
+| Hub | Nivån där klient och server kan anropa metoder på varandra |
+| Negotiation | Inledande utbyte av connection info och transport |
+| Transport | Mekanismen som bär kommunikationen, till exempel WebSocket |
+| Autentisering | Fastställer vem användaren är |
+| Auktorisering | Avgör vad användaren får göra |
+| TLS | Kryptering av trafiken mellan klient och server. https är http över TLS, wss är WebSocket över TLS. Mer i pass 3 och 5 |
+| wss | WebSocket över TLS, alltså krypterad. ws är samma sak i klartext |
+| XSS | När text från en användare körs som kod i en annan användares webbläsare, till exempel via innerHTML. Mer i pass 3 |
+| Spoofing | Att utge sig för att vara någon annan, till exempel genom att skicka ett annat användarnamn. Mer i pass 3 |
+| Rate limiting | Gräns för hur många anrop en klient får göra per tidsenhet |
+| Trust boundary | Gränsen mellan det servern litar på och det den inte litar på. I vår app går den vid hubben |
+| Source | Var angriparkontrollerad data kommer in |
+| Sink | Där datan används på ett sätt som kan skapa en risk |

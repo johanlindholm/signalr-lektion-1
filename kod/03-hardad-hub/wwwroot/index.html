@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="sv">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Chat: härdad hub</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <main class="chat">
+    <header>
+      <h1>Chat <small style="font-weight:normal;color:var(--muted)">härdad hub</small></h1>
+      <span id="status" class="status status--off">Ej inloggad</span>
+    </header>
+
+    <form id="login-form" class="row">
+      <input id="login-name" type="text" placeholder="Användarnamn (prova admin)" autocomplete="username" required>
+      <button type="submit">Logga in</button>
+      <button type="button" id="logout" class="secondary" hidden>Logga ut</button>
+      <small>Inloggningen är en stub utan lösenord. Den ersätts av riktig autentisering i en senare lektion.</small>
+    </form>
+
+    <ul id="messages" class="messages" aria-live="polite"></ul>
+
+    <form id="send-form" class="send">
+      <input id="message" type="text" placeholder="Meddelande till alla (max 500 tecken)" autocomplete="off" required disabled>
+      <button type="submit" disabled>Skicka</button>
+    </form>
+
+    <form id="group-form" class="row">
+      <input id="group" type="text" placeholder="Grupp: General, Support, Administrators" autocomplete="off" required disabled>
+      <button type="submit" class="secondary" disabled>Gå med i grupp</button>
+      <input id="group-message" type="text" placeholder="Meddelande till gruppen" autocomplete="off" disabled>
+      <button type="button" id="send-group" class="secondary" disabled>Skicka till grupp</button>
+    </form>
+
+    <form id="private-form" class="row">
+      <input id="private-to" type="text" placeholder="Till användare" autocomplete="off" required disabled>
+      <input id="private-message" type="text" placeholder="Privat meddelande" autocomplete="off" required disabled>
+      <button type="submit" class="secondary" disabled>Skicka privat</button>
+    </form>
+  </main>
+
+  <script src="lib/signalr.min.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
