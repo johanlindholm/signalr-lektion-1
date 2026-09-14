@@ -1,9 +1,11 @@
 # Attacksnuttar för konsolen
 
 Kör dem i webbläsarens konsol (F12, fliken Console) medan du står på chattsidan.
-`connection` finns redan i `window` i alla tre apparna.
+`window.connection` finns i alla tre apparna. I 01 måste du först slutföra anslutningen i lab 1. Kontrollera att sidan visar Ansluten.
 
-Numreringen följer studentmaterialets lab 2. Testa varje attack mot **den svaga hubben** (din egen från lab 1, eller `02-svag-hub` på port 5102) och sedan mot **den härdade** (`03-hardad-hub`, port 5103, kräver inloggning). Notera skillnaden i vad servern släpper igenom.
+Numreringen följer slide 27 och studentmaterialets lab 2. Testa varje attack mot **den svaga hubben** (din egen från lab 1, eller `02-svag-hub` på https://localhost:7102) och sedan mot **den härdade** (https://localhost:7103, kräver inloggning). Använd rätt kodblock för respektive hub.
+
+Kör ett kodblock i taget. Förväntade fel från `await` avbryter resten av samma inklistrade block. Efter 1 MB-testet: ladda om, anslut igen och gå med i grupper på nytt. Stäng XSS-dialogen i båda flikarna innan du fortsätter.
 
 ## 1. Spoofing
 
@@ -18,8 +20,12 @@ await connection.invoke("SendMessage", "Administrator", "Servern startas om nu, 
 // Härdad hub: metoden tar inget username. Servern använder din inloggade identitet.
 await connection.invoke("SendMessage", "Administrator", "hej");
 // -> Fel: SendMessage tar bara ett argument. Namnet kommer från cookien.
+```
+
+```js
+// Kör separat efter felet ovan.
 await connection.invoke("SendMessage", "hej alla");
-// -> Visas med ditt riktiga namn.
+// -> Visas med ditt inloggade namn. Labbinloggningen verifierar inte vem du är.
 ```
 
 ## 2. Gå med i en grupp du inte ska ha åtkomst till
@@ -42,6 +48,10 @@ await connection.invoke("SendToGroup", "Administrators", "admin", "Alla lösenor
 // Härdad hub: servern äger grupprättigheterna.
 await connection.invoke("JoinGroup", "Administrators");
 // -> Fel: Du har inte behörighet till den gruppen. (om du inte loggade in som admin)
+```
+
+```js
+// Kör separat efter felet ovan.
 await connection.invoke("JoinGroup", "General");
 // -> OK, General är öppen för alla inloggade.
 ```
@@ -68,9 +78,9 @@ Poängen: risken uppstod inte när datan togs emot, utan när den användes i en
 Kör den lilla varianten först. Den stora stänger anslutningen, och då måste du ladda om sidan innan du kan fortsätta.
 
 ```js
-// Precis under den tekniska gränsen men långt över en rimlig chattlängd.
+// Svag hub: under den tekniska gränsen men över labbens längdregel.
 await connection.invoke("SendMessage", "Eve", "B".repeat(3000));
-// Svag hub: går igenom. Härdad hub: Fel, max 500 tecken.
+// Svag hub: går igenom. Använd kodblocket för härdad hub nedan vid jämförelsen.
 ```
 
 ```js
@@ -97,7 +107,7 @@ await connection.invoke("SendMessage", "A".repeat(1024 * 1024));
 ## 5. Spam (rate)
 
 ```js
-// Många små anrop. 1000 räcker för att se effekten, 10 000 om du vill känna den.
+// Svag hub: 1000 små anrop, som på slide 27.
 for (let i = 0; i < 1000; i++) {
     connection.invoke("SendMessage", "Eve", "spam " + i);
 }

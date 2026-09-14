@@ -2,6 +2,12 @@
 
 Bygg en realtidschatt, undersök vad servern litar på och härda sedan din kod. Börja med [labbinstruktionerna](studentmaterial.md).
 
+**Dagens fråga:** Hur får en server ut information till en klient i samma stund som något händer?
+
+Förmiddag 09:00–12:00: genomgång, demonstrationer och parövningar. Eftermiddag 13:00–16:00: du bygger, attackerar och härdar själv. Klockan 15:45 lämnar du en exit ticket.
+
+[Kom igång](#hämta-och-starta) · [Lab 1](studentmaterial.md#lab-1-bygg-chatten) · [Lab 2](studentmaterial.md#lab-2-attackera-din-egen-hub) · [Lab 3](studentmaterial.md#lab-3-härda-hubben) · [Felsökning](studentmaterial.md#felsökning)
+
 ## Hämta och starta
 
 Klona repot, eller välj **Code → Download ZIP** och packa upp filen.
@@ -34,10 +40,28 @@ dotnet run --project kod/01-start --launch-profile https
 
 De tre stegen hör till samma kursdag. Arbeta i din egen kopia av 01; du behöver inte byta Git-branch mellan labbarna. Gör gärna en commit efter varje labb.
 
+## Från slides till kod
+
+| Slides | Det du följer eller gör | Var du hittar det |
+|---|---|---|
+| 4–18 | HTTP → polling → SSE → WebSocket → SignalR | [Dagens röda tråd](studentmaterial.md#dagens-röda-tråd) och teknikövningen i handouten |
+| 19–20 | Följ ett meddelande och hitta negotiate, 101 och frames | [Program.cs](kod/02-svag-hub/Program.cs), [ChatHub.cs](kod/02-svag-hub/ChatHub.cs), [app.js](kod/02-svag-hub/wwwroot/app.js) |
+| 22–23 | Hotjakt i par | [Hotjakt](studentmaterial.md#gruppövning-på-förmiddagen-hotjakt) |
+| 24–29 | Identitet, behörighet och fem attacker | [Attacksnuttar](kod/attacker/attacker.md), i samma ordning som slide 27 |
+| 30 | Sju steg från svag till härdad | [Lab 3](studentmaterial.md#lab-3-härda-hubben) och referensen 03 |
+| 31–33 | Eget arbete och avstämning | [Lab 1](studentmaterial.md#lab-1-bygg-chatten) → [Lab 2](studentmaterial.md#lab-2-attackera-din-egen-hub) → [Lab 3](studentmaterial.md#lab-3-härda-hubben) → [Exit ticket](studentmaterial.md#exit-ticket) |
+
+## Kör referenserna
+
 Starta referenserna från repots rot vid behov, i var sin terminal:
 
 ```bash
 dotnet run --project kod/02-svag-hub --launch-profile https
+```
+
+I en annan terminal:
+
+```bash
 dotnet run --project kod/03-hardad-hub --launch-profile https
 ```
 

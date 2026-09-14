@@ -110,7 +110,7 @@ dotnet --version           # 8.0 eller senare
 dotnet dev-certs https --trust
 ```
 
-Det andra kommandot gör att `https://localhost` fungerar utan certifikatvarning. Hoppar du över det kommer anslutningen att misslyckas utan tydligt fel.
+Det andra kommandot gör utvecklingscertifikatet betrott för `https://localhost`. Gör första restore och bygge med internet före lektionen, eftersom referenspaket kan behöva hämtas. JavaScript-klienten finns redan i projekten.
 
 Projekten ligger i `kod/`:
 
@@ -118,14 +118,13 @@ Projekten ligger i `kod/`:
 - `02-svag-hub` är en färdig men osäker version. Använd den bara om du kör fast, eller som attackmål.
 - `03-hardad-hub` är en referenslösning för härdningen. Kika först när du försökt själv.
 
-Starta ett projekt:
+Starta från repots rot:
 
 ```bash
-cd kod/01-start
-dotnet run
+dotnet run --project kod/01-start --launch-profile https
 ```
 
-Öppna adressen som skrivs ut, till exempel `https://localhost:7101`.
+Öppna `https://localhost:7101`. Startprojektet har ännu ingen fungerande chatt. Låt terminalen vara igång. Efter ändringar i C#: stoppa med Ctrl+C och kör samma kommando igen. Efter ändringar i JavaScript: ladda om sidan, gärna med Ctrl+F5.
 
 ---
 
@@ -157,11 +156,13 @@ Alla ledtrådar finns i filerna.
 
 ### Klar när
 
-Du öppnar appen i två flikar, skriver i den ena och meddelandet syns i båda. Öppna sedan Developer Tools (F12), fliken Network, och hitta:
+Du öppnar appen i två flikar, skriver i den ena och meddelandet syns i båda. Öppna sedan Developer Tools (F12), fliken Network, och **ladda om sidan medan Network är öppet**. Hitta:
 
-1. `POST /hubs/chat/negotiate`
+1. `POST /hubs/chat/negotiate` med filtret All
 2. WebSocket-anslutningen (filtrera på WS), statuskod 101
-3. de frames som skickas när du skriver ett meddelande
+3. de frames som skickas när du skriver ett meddelande (välj WS-raden och Messages)
+
+Stäng den andra fliken och notera att dess anslutning försvinner, som på slide 20.
 
 Kör till sist `connection.invoke("JoinGroup", "General")` i konsolen och se att du får en systemrad tillbaka.
 
@@ -177,7 +178,7 @@ Titta i tabellen sist i det här dokumentet. Kommer du ändå inte vidare, jämf
 
 Nu vänder du verktygen mot din egen kod. Öppna appen i två flikar, öppna konsolen (F12, fliken Console). Anslutningen ligger i `window.connection`. Hann du inte med steg 1.8, kör i stället mot `02-svag-hub`, som har samma hål.
 
-Snuttarna finns i `kod/attacker/attacker.md`, numrerade som nedan. Kör dem en i taget. För varje attack, skriv ner tre rader:
+Snuttarna finns i [attacker.md](kod/attacker/attacker.md), numrerade som på slide 27. Kör dem en i taget mot din lokala app. För varje attack, skriv ner tre rader:
 
 ```text
 Vad jag som angripare skickade eller gjorde
@@ -203,13 +204,21 @@ Notera särskilt skillnaden i attack 4. Den ena går rakt igenom, den andra stop
 
 Nu täpper du till hålen du hittade. Gör dem i ordning. Efter varje fix, kör om motsvarande attack och kontrollera att den nu stoppas.
 
+Fortsätt i din egen kod från lab 1, eller i en egen kopia av 02 om du använde reservprojektet. Stegen nedan följer de sju raderna på slide 30.
+
 1. Identitet från servern. Ta bort `username`-argumentet från `SendMessage`. Hämta i stället namnet från serverns kontext. Det förutsätter att användaren är inloggad. Titta i referenslösningen på hur en enkel inloggning sätter upp identiteten.
 2. Rätt mottagare. Fråga dig om varje meddelande verkligen ska gå till alla. Lär dig skillnaden mellan `Clients.All`, `Clients.Caller`, `Clients.Others`, `Clients.User` och `Clients.Group`.
 3. Grupprättigheter på servern. Låt inte klienten bestämma vilken grupp den får gå med i. Lägg kontrollen på servern.
 4. Kontroll vid varje känslig operation. Kontrollera behörigheten både när man går med i en grupp och när man skickar till den. En anslutning lever länge och rättigheter kan ändras.
-5. Domänvalidering. Inför en regel om att ett meddelande inte får vara tomt och högst till exempel 500 tecken. Det är något annat än den tekniska storleksgränsen.
-6. Rate limiting. Hindra att en klient kan spamma obegränsat.
+5. Domänvalidering. Avvisa tomma meddelanden och meddelanden över 500 tecken. Sätt också SignalR:s `MaximumReceiveMessageSize` till `4 * 1024` byte. Visa skillnaden mellan verksamhetsregeln och det tekniska taket.
+6. Rate limiting. Hindra obegränsat spam: referensen tillåter 20 anrop per 10 sekunder och anslutning. Det är ett enkelt labbexempel, som på slide 30.
 7. Säker rendering. Byt ut osäker DOM-rendering i klienten så att inkommande text visas som text, inte som HTML.
+
+När du tar bort `username` från hubmetoderna måste du också ändra klientens `invoke`-anrop. Använd varianterna märkta Härdad hub i attackfilen. Ett fel om fel antal argument visar inte att längdregeln eller rate limiting fungerar.
+
+I referensen är `SendMessage` en öppen chatt för alla inloggade, så `Clients.All` finns kvar med ett uttalat syfte. Gruppmeddelanden går till `Clients.Group`, och privata meddelanden till `Clients.User`. Jämför mottagarvalen i steg 2.
+
+Inloggningen i 03 är en labbstub utan lösenord: vem som helst kan välja namnet `admin`. Använd Alice i ett vanligt fönster och admin i ett privat fönster för att jämföra behörigheter. Hubben kontrollerar identiteten på anslutningen; exemplet visar inte automatisk uppdatering av roller när en användares rättigheter ändras under en pågående anslutning.
 
 ### Klar när
 

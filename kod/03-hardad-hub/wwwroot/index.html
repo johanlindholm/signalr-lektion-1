@@ -3,18 +3,20 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Chat: härdad hub</title>
+  <title>Lab 3 · Härdad referens | SignalR</title>
   <link rel="stylesheet" href="styles.css">
 </head>
 <body>
   <main class="chat">
     <header>
-      <h1>Chat <small style="font-weight:normal;color:var(--muted)">härdad hub</small></h1>
+      <h1>Lab 3 · Härdad referens</h1>
       <span id="status" class="status status--off">Ej inloggad</span>
     </header>
 
+    <p>Jämför med din egen härdning. Logga in som Alice först och kör attackfilens varianter för härdad hub.</p>
+
     <form id="login-form" class="row">
-      <input id="login-name" type="text" placeholder="Användarnamn (prova admin)" autocomplete="username" required>
+      <input id="login-name" type="text" placeholder="Användarnamn, till exempel Alice" autocomplete="username" required>
       <button type="submit">Logga in</button>
       <button type="button" id="logout" class="secondary" hidden>Logga ut</button>
       <small>Inloggningen är en stub utan lösenord. Den ersätts av riktig autentisering i en senare lektion.</small>

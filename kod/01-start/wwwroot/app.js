@@ -14,6 +14,9 @@ const messageEl = document.getElementById("message");
 //           Ledtråd: new signalR.HubConnectionBuilder().withUrl("...").build()
 const connection = null;
 
+// Används från konsolen i lab 2 när du har skapat anslutningen ovan.
+window.connection = connection;
+
 // TODO 1.5: Registrera en handler för klientmetoden "ReceiveMessage".
 //           Servern anropar den med (username, message). Lägg till en rad i listan.
 //           Ledtråd: connection.on("ReceiveMessage", (username, message) => { ... });
@@ -51,9 +54,15 @@ form.addEventListener("submit", async (event) => {
 });
 
 async function start() {
+    if (!connection) {
+        setStatus("Fyll i TODO:erna för att ansluta", false);
+        return;
+    }
+
     try {
         // TODO 1.7: Starta anslutningen. Ledtråd: await connection.start();
-        setStatus("Ansluten", true);
+        const connected = connection.state === signalR.HubConnectionState.Connected;
+        setStatus(connected ? "Ansluten" : "Anslutningen är inte startad ännu", connected);
     } catch (err) {
         setStatus("Anslutning misslyckades", false);
         console.error(err);

@@ -11,16 +11,17 @@ Tre ASP.NET Core-projekt och en samling attacksnuttar.
 
 ## Krav
 
-.NET SDK 8.0 eller senare. Projekten är satta att rulla fram till en nyare major (`RollForward=LatestMajor`), så en enbart installerad .NET 10-runtime fungerar också.
+.NET SDK 8.0 eller senare behövs för att bygga. Projekten riktar sig mot .NET 8 och tillåter nyare runtime genom `RollForward=LatestMajor`. Enbart runtime räcker inte för att bygga koden.
 
 Gör restore och bygge med internet före lektionen: en ny dator kan behöva hämta referenspaket för .NET 8. Därefter kan demonstrationen köras offline. SignalR ingår i ASP.NET Core, och JavaScript-klienten ligger lokalt i varje projekt under `wwwroot/lib/signalr.min.js`.
 
 ## Kör
 
+Kör från repots rot:
+
 ```bash
 dotnet dev-certs https --trust   # en gång per maskin
-cd 02-svag-hub
-dotnet run
+dotnet run --project kod/02-svag-hub --launch-profile https
 ```
 
 Öppna adressen som skrivs ut, till exempel `https://localhost:7102`. Öppna gärna i två flikar för att se realtidsbeteendet.
@@ -42,4 +43,4 @@ Referenslösningen har en inloggningsstub utan lösenord (`/dev-login`), enbart 
 | `signalR is not defined` | klientbiblioteket laddas inte | kontrollera `wwwroot/lib/signalr.min.js` och script-ordningen i `index.html` |
 | 401 i den härdade hubben | inte inloggad | logga in först via sidan |
 
-Projekten skapades och verifierades mot .NET SDK 8.0. Kontrollera versionslänkarna i lärarhandledningen mot den SDK studenterna faktiskt kör.
+För arbetsordning och koppling till slidesen, se [repots startsida](../README.md). För uppgifter och felsökning, se [studentmaterialet](../studentmaterial.md).
