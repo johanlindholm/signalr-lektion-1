@@ -28,6 +28,8 @@ dotnet run --project kod/02-svag-hub --launch-profile https
 
 ## Attackövningen
 
+Utvecklingsinställningarna väljer HTTP/1.1 för att WebSocket-handshaken ska visa status 101 som på slides 15 och 20. HTTPS är fortfarande aktiverat. Med HTTP/2 kan WebSocket i stället etableras med CONNECT och status 200; det betyder inte att transporten har fallit tillbaka.
+
 Kör den svaga hubben, öppna webbläsarens konsol (F12) och använd snuttarna i `attacker/attacker.md`. Anslutningen finns i `window.connection`. Använd sedan varianterna märkta Härdad hub (kräver inloggning först). Dess `SendMessage` tar bara meddelandet, inget användarnamn.
 
 ## Inloggning i den härdade hubben

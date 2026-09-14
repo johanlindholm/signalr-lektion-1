@@ -94,6 +94,8 @@ Det är i sig en poäng: en teknisk defaultgräns fångar det grövsta, men ers�
 
 Härdad hub: gränsen är satt till 4 KB, och dessutom finns regeln max 500 tecken.
 
+Den härdade klienten försöker återansluta automatiskt när transporten stängs. Du kan därför se Återansluter följt av Ansluten. Ladda om och logga in igen för att börja nästa test från ett tydligt utgångsläge; gå med i grupper på nytt vid behov.
+
 ```js
 // Härdad hub: längdregeln avvisar detta. Kör separat från nästa anrop.
 await connection.invoke("SendMessage", "B".repeat(3000));
