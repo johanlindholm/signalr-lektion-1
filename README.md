@@ -4,7 +4,7 @@ Bygg en realtidschatt, undersök vad servern litar på och härda sedan din kod.
 
 **Dagens fråga:** Hur får en server ut information till en klient i samma stund som något händer?
 
-Förmiddag 09:00–12:00: genomgång, demonstrationer och parövningar. Eftermiddag 13:00–16:00: du bygger, attackerar och härdar själv. Labbarna är frivilliga och lämnas inte in eller rättas av läraren. Gör dem i din egen takt och jämför gärna med facit efteråt. [Exit ticket](exit-ticket.md) är en egen uppgift med facit som du kan rätta själv, tillsammans med andra eller med hjälp av AI, gärna omkring 15:45 eller när det passar dig.
+Förmiddag: genomgång, demonstrationer och parövningar. Eftermiddag du bygger, attackerar och härdar själv. Labbarna är frivilliga och lämnas inte in eller rättas av läraren. Gör dem i din egen takt och jämför gärna med facit efteråt. [Exit ticket](exit-ticket.md) är en egen uppgift med facit som du kan rätta själv, tillsammans med andra eller med hjälp av AI.
 
 [Kom igång](#hämta-och-starta) · [Lab 1](studentmaterial.md#lab-1-bygg-chatten) · [Lab 2](studentmaterial.md#lab-2-attackera-din-egen-hub) · [Lab 3](studentmaterial.md#lab-3-härda-hubben) · [Felsökning](studentmaterial.md#felsökning)
 

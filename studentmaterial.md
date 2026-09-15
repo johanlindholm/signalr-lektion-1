@@ -232,6 +232,7 @@ Referenslösningen `03-hardad-hub` visar en möjlig väg. Den är inte en färdi
 
 ## Stretch, om du blir klar
 
+- Låt servern skicka själv med [ClockService-övningen](fordjupning-clockservice.md), som på slide 35. Frivilligt, med kodförslag och egen kontroll.
 - Bygg privata meddelanden med `Clients.User`. Se `SendPrivate` i referenslösningen.
 - Logga in som `admin` i referenslösningen och jämför med en vanlig användare. Vem släpps in i gruppen Administrators, och var bestäms det?
 - Läs kommentaren längst ner i `Program.cs` i referenslösningen och skriv en egen lista över vad som återstår innan något liknande får gå i produktion.
