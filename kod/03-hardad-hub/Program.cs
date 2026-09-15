@@ -30,8 +30,16 @@ builder.Services
 
         // Ett API ska svara 401/403, inte skicka en 302 till en inloggningssida.
         // Utan detta får SignalR-klienten en HTML-sida tillbaka från /negotiate och felet blir obegripligt.
-        options.Events.OnRedirectToLogin = ctx => { ctx.Response.StatusCode = StatusCodes.Status401Unauthorized; return Task.CompletedTask; };
-        options.Events.OnRedirectToAccessDenied = ctx => { ctx.Response.StatusCode = StatusCodes.Status403Forbidden; return Task.CompletedTask; };
+        options.Events.OnRedirectToLogin = context =>
+        {
+            context.Response.StatusCode = StatusCodes.Status401Unauthorized;
+            return Task.CompletedTask;
+        };
+        options.Events.OnRedirectToAccessDenied = context =>
+        {
+            context.Response.StatusCode = StatusCodes.Status403Forbidden;
+            return Task.CompletedTask;
+        };
     });
 
 // 2. Auktorisering: vad får du göra?
@@ -61,11 +69,15 @@ var app = builder.Build();
 
 // Skapa limitern direkt vid start. Konstruktorn validerar RateLimit-inställningarna, och en felaktig
 // inställning ska stoppa appen nu, inte först vid första hubbanropet.
-app.Services.GetRequiredService<InvocationRateLimiter>();
+// "_ =" betyder att vi medvetet inte använder resultatet, vi vill bara att objektet skapas.
+_ = app.Services.GetRequiredService<InvocationRateLimiter>();
 
+// 4. Middleware-pipelinen. Ordningen spelar roll: varje anrop går genom stegen uppifrån och ned.
 app.UseDefaultFiles();
 app.UseStaticFiles();
 
+// UseAuthentication måste komma före UseAuthorization, och båda före MapHub. Med fel ordning
+// är Context.User tom när behörigheten kontrolleras, och [Authorize] nekar allt utan tydligt fel.
 app.UseAuthentication();
 app.UseAuthorization();
 
@@ -74,6 +86,9 @@ app.UseAuthorization();
 // av bytet, eftersom den bara läser Context.User.
 app.MapPost("/dev-login", async (HttpContext http, LoginRequest login, IConfiguration config) =>
 {
+    // Diskussionsfråga: char.IsLetterOrDigit godkänner alla Unicode-bokstäver. Någon kan logga in som
+    // "Аdmin" med kyrilliskt А. Den användaren får ingen admin-roll, men namnet ser likadant ut i chatten.
+    // Vad litar mottagarna på här, och hur skulle du stänga det?
     if (string.IsNullOrWhiteSpace(login.Name) || login.Name.Length > 30 || !login.Name.All(char.IsLetterOrDigit))
     {
         return Results.BadRequest(new { error = "Namnet får bara innehålla bokstäver och siffror, max 30 tecken." });
@@ -87,7 +102,8 @@ app.MapPost("/dev-login", async (HttpContext http, LoginRequest login, IConfigur
     };
 
     // Servern äger listan över administratörer (appsettings.json), inte klienten.
-    var admins = config.GetSection("Auth:AdminUsers").Get<string[]>() ?? [];
+    // userId är redan gemener, så jämförelsen ignorerar skiftläge även om appsettings skriver "Admin".
+    var admins = config.GetSection("Auth:AdminUsers").Get<string[]>() ?? Array.Empty<string>();
     if (admins.Contains(userId, StringComparer.OrdinalIgnoreCase))
     {
         claims.Add(new Claim(ClaimTypes.Role, "Admin"));
