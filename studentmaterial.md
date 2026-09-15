@@ -5,7 +5,9 @@ Tid: eftermiddagen, du arbetar själv och läraren finns tillgänglig
 
 Idag bygger du en realtidschatt med SignalR, attackerar den och härdar den. Målet är inte att memorera metoder, utan att träna en vana: för varje steg i flödet, fråga dig vad servern litar på och vilket säkerhetsbeslut som måste fattas där.
 
-Arbeta i din egen takt. Fastnar du mer än några minuter, fråga läraren. Du behöver inte hinna allt, men gör stegen i ordning.
+Labbarna är frivilliga övningar. Välj själv hur mycket du vill göra och om du arbetar själv eller tillsammans med andra. De lämnas inte in och rättas inte av läraren. Fråga gärna läraren om du kör fast.
+
+Försök gärna själv och jämför sedan med facit: `02-svag-hub` för lab 1, [attacksnuttarna med förväntade resultat](kod/attacker/attacker.md) för lab 2 och `03-hardad-hub` för lab 3. Avsnitten ”Klar när” hjälper dig att kontrollera din lösning. Om du gör alla labbar bygger de vidare på varandra i ordning.
 
 Det här är kursens första pass. Termer som TLS, XSS och spoofing dyker upp idag, men de får sin riktiga genomgång i pass 3 (IT-säkerhet och krypto) och pass 5 (säker kommunikation). Idag räcker det att se vad som händer. Begreppslistan sist i dokumentet har korta förklaringar.
 
@@ -115,8 +117,8 @@ Det andra kommandot gör utvecklingscertifikatet betrott för `https://localhost
 Projekten ligger i `kod/`:
 
 - `01-start` är din utgångspunkt. Hubben är tom och har TODO:er.
-- `02-svag-hub` är en färdig men osäker version. Använd den bara om du kör fast, eller som attackmål.
-- `03-hardad-hub` är en referenslösning för härdningen. Kika först när du försökt själv.
+- `02-svag-hub` är en färdig men osäker version. Använd den som facit till lab 1 eller som attackmål.
+- `03-hardad-hub` är en referenslösning för härdningen. Försök gärna själv och jämför sedan med den.
 
 Starta från repots rot:
 
@@ -238,18 +240,7 @@ Referenslösningen `03-hardad-hub` visar en möjlig väg. Den är inte en färdi
 
 ## Exit ticket
 
-Fylls i individuellt kl 15:45, efter labben, och lämnas till läraren innan du går. En till två meningar per fråga, det ska ta fem minuter. Det är ingen examination. Den visar läraren vad som landat och vad nästa pass behöver plocka upp.
-
-Namn: ______________________
-
-1. Förklara med en mening vad SignalR gör som WebSocket inte gör.
-2. Varifrån ska servern hämta vem användaren är, och varför inte från metodargumentet?
-3. Servern vet att det är Alice som anropar. Räcker det för att låta henne gå med i gruppen Administrators? Varför, eller varför inte?
-4. Med `Clients.All` får alla anslutna meddelandet. Ge ett exempel på när det är fel, och vad du väljer i stället.
-5. Trafiken är krypterad (wss). Nämn två saker som ändå kan gå fel i vår chatt.
-6. Vilken attack från lab 2 stoppade du i lab 3, och var i koden sitter kontrollen nu? Hann du inte dit: vilken skulle du stoppa först, och var?
-
-Vad är fortfarande oklart efter idag? Skriv en rad, även om det är "inget".
+[Exit ticket är en egen uppgift med facit](exit-ticket.md). Du kan göra den oberoende av labbarna och rätta själv, tillsammans med andra eller med hjälp av AI. Ingen inlämning eller lärarrättning.
 
 ---
 

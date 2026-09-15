@@ -4,7 +4,7 @@ Bygg en realtidschatt, undersök vad servern litar på och härda sedan din kod.
 
 **Dagens fråga:** Hur får en server ut information till en klient i samma stund som något händer?
 
-Förmiddag 09:00–12:00: genomgång, demonstrationer och parövningar. Eftermiddag 13:00–16:00: du bygger, attackerar och härdar själv. Klockan 15:45 lämnar du en exit ticket.
+Förmiddag 09:00–12:00: genomgång, demonstrationer och parövningar. Eftermiddag 13:00–16:00: du bygger, attackerar och härdar själv. Labbarna är frivilliga och lämnas inte in eller rättas av läraren. Gör dem i din egen takt och jämför gärna med facit efteråt. [Exit ticket](exit-ticket.md) är en egen uppgift med facit som du kan rätta själv, tillsammans med andra eller med hjälp av AI, gärna omkring 15:45 eller när det passar dig.
 
 [Kom igång](#hämta-och-starta) · [Lab 1](studentmaterial.md#lab-1-bygg-chatten) · [Lab 2](studentmaterial.md#lab-2-attackera-din-egen-hub) · [Lab 3](studentmaterial.md#lab-3-härda-hubben) · [Felsökning](studentmaterial.md#felsökning)
 
@@ -49,7 +49,7 @@ De tre stegen hör till samma kursdag. Arbeta i din egen kopia av 01; du behöve
 | 22–23 | Hotjakt i par | [Hotjakt](studentmaterial.md#gruppövning-på-förmiddagen-hotjakt) |
 | 24–29 | Identitet, behörighet och fem attacker | [Attacksnuttar](kod/attacker/attacker.md), i samma ordning som slide 27 |
 | 30 | Sju steg från svag till härdad | [Lab 3](studentmaterial.md#lab-3-härda-hubben) och referensen 03 |
-| 31–33 | Eget arbete och avstämning | [Lab 1](studentmaterial.md#lab-1-bygg-chatten) → [Lab 2](studentmaterial.md#lab-2-attackera-din-egen-hub) → [Lab 3](studentmaterial.md#lab-3-härda-hubben) → [Exit ticket](studentmaterial.md#exit-ticket) |
+| 31–33 | Eget arbete och avstämning | [Lab 1](studentmaterial.md#lab-1-bygg-chatten) → [Lab 2](studentmaterial.md#lab-2-attackera-din-egen-hub) → [Lab 3](studentmaterial.md#lab-3-härda-hubben) → [Exit ticket](exit-ticket.md) |
 
 ## Kör referenserna
 
