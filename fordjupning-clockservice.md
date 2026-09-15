@@ -1,6 +1,6 @@
 # Fördjupning: låt servern skicka själv
 
-En frivillig fortsättning på slide 35. Ingen inlämning eller lärarrättning. Försök gärna själv och jämför med kodförslaget nedan.
+En frivillig fortsättning på slide 37. Ingen inlämning eller lärarrättning. Försök gärna själv och jämför med kodförslaget nedan.
 
 ## Uppgift
 

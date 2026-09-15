@@ -6,8 +6,15 @@
 using System.Security.Claims;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.AspNetCore.Server.Kestrel.Core;
 
 var builder = WebApplication.CreateBuilder(args);
+
+// Kestrel kör HTTP/2 över https som standard, och då etableras WebSocket på ett annat sätt
+// (RFC 8441, ingen "101 Switching Protocols", Network-fliken visar 200). Vi låser till HTTP/1.1
+// så att handshaken från lektionen syns som den är. Ta bort raden i ett riktigt system.
+builder.WebHost.ConfigureKestrel(kestrel =>
+    kestrel.ConfigureEndpointDefaults(endpoint => endpoint.Protocols = HttpProtocols.Http1));
 
 // 1. Autentisering: vem är du?
 //    Cookie-baserad inloggning. Webbläsaren skickar cookien automatiskt med både
@@ -28,6 +35,8 @@ builder.Services
     });
 
 // 2. Auktorisering: vad får du göra?
+//    Policyn används av [Authorize(Policy = "Admin")] på ChatHub.Broadcast. Den kontrolleras per anrop.
+//    [Authorize] utan policy, på hubben, kräver bara inloggning och kontrolleras vid anslutning.
 builder.Services.AddAuthorization(options =>
 {
     options.AddPolicy("Admin", policy => policy.RequireRole("Admin"));

@@ -85,6 +85,23 @@ public sealed class ChatHub : Hub<IChatClient>
         await Clients.Group(groupName).ReceiveGroupMessage(groupName, UserName, text);
     }
 
+    // Tre nivåer av auktorisering, och det här är nivå två:
+    //   1. [Authorize] på klassen: du måste vara inloggad för att ansluta alls. Kontrolleras en gång, vid anslutning.
+    //   2. [Authorize(Policy = ...)] på en metod: du måste ha rollen för att anropa just den här metoden.
+    //      SignalR kontrollerar det vid varje anrop, innan metoden körs. Utan rollen får klienten ett fel.
+    //   3. Egen kod i metoden (GroupPolicy ovan): när beslutet beror på argumentet, till exempel vilken grupp.
+    //      Vår Admin-policy kontrollerar bara rollen. En egen authorization handler kan också
+    //      läsa argument via HubInvocationContext; här håller vi gruppregeln i GroupPolicy.
+    [Authorize(Policy = "Admin")]
+    public async Task Broadcast(string message)
+    {
+        EnforceRateLimit();
+        var text = ValidateMessage(message);
+
+        _logger.LogInformation("Broadcast från {User}", UserName);
+        await Clients.All.ReceiveSystem($"Meddelande från {UserName}: {text}");
+    }
+
     // Privat meddelande till en användare. Clients.User använder ClaimTypes.NameIdentifier,
     // som sattes vid inloggningen. Mottagaren väljs av klienten, avsändaren av servern.
     public async Task SendPrivate(string toUser, string message)

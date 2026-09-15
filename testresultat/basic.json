@@ -1,0 +1,50 @@
+{
+  "date": "2026-09-15T17:50:49.305Z",
+  "browser": "145.0.7632.6",
+  "portBase": 17200,
+  "scope": "basic",
+  "httpsErrorsIgnored": false,
+  "success": true,
+  "results": [
+    {
+      "name": "Tvåflikschatt över HTTPS",
+      "detail": "Formuläret skickar till båda flikarna, även avsändaren."
+    },
+    {
+      "name": "Slide 20: negotiate, 101 och frames",
+      "detail": "POST-svar 200, WebSocket-status 101 och SendMessage-frame observerade."
+    },
+    {
+      "name": "Svag: spoofing",
+      "detail": "Bob ser Administrator som avsändare."
+    },
+    {
+      "name": "Svag: gruppåtkomst",
+      "detail": "Båda går med utan inloggning; falskt adminmeddelande når gruppen."
+    },
+    {
+      "name": "Svag: XSS",
+      "detail": "alert(\"xss\") utlöstes i båda riktiga webbläsarflikarna."
+    },
+    {
+      "name": "Svag: 3000 tecken",
+      "detail": "Hela meddelandet visas hos mottagaren."
+    },
+    {
+      "name": "Svag: 1 MB",
+      "detail": "Anropet misslyckas och anslutningen stängs."
+    },
+    {
+      "name": "Svag: spam",
+      "detail": "Alla 1000 anrop lyckas och visas hos mottagaren."
+    },
+    {
+      "name": "Startprojekt",
+      "detail": "Sidan laddas, connection är null och statusen visar att TODO:erna återstår."
+    },
+    {
+      "name": "Svag: serveromstart",
+      "detail": "02 förblir frånkopplad utan automatic reconnect; omladdning ansluter igen."
+    }
+  ]
+}

@@ -1,0 +1,78 @@
+{
+  "date": "2026-09-15T17:32:57.034Z",
+  "browser": "145.0.7632.6",
+  "portBase": 17100,
+  "httpsErrorsIgnored": false,
+  "success": false,
+  "error": "locator.waitFor: Timeout 30000ms exceeded.\nCall log:\n\u001b[2m  - waiting for getByText('Fyll i TODO:erna för att ansluta', { exact: true }) to be visible\u001b[22m\n",
+  "results": [
+    {
+      "name": "Tvåflikschatt över HTTPS",
+      "detail": "Formuläret skickar till båda flikarna, även avsändaren."
+    },
+    {
+      "name": "Slide 20: negotiate, 101 och frames",
+      "detail": "POST-svar 200, WebSocket-status 101 och SendMessage-frame observerade."
+    },
+    {
+      "name": "Svag: spoofing",
+      "detail": "Bob ser Administrator som avsändare."
+    },
+    {
+      "name": "Svag: gruppåtkomst",
+      "detail": "Båda går med utan inloggning; falskt adminmeddelande når gruppen."
+    },
+    {
+      "name": "Svag: XSS",
+      "detail": "alert(\"xss\") utlöstes i båda riktiga webbläsarflikarna."
+    },
+    {
+      "name": "Svag: 3000 tecken",
+      "detail": "Hela meddelandet visas hos mottagaren."
+    },
+    {
+      "name": "Svag: 1 MB",
+      "detail": "Anropet misslyckas och anslutningen stängs."
+    },
+    {
+      "name": "Svag: spam",
+      "detail": "Alla 1000 anrop lyckas och visas hos mottagaren."
+    },
+    {
+      "name": "Härdad: inloggning",
+      "detail": "Anonym negotiate får 401; Alice och admin ansluter i separata sessioner."
+    },
+    {
+      "name": "Härdad: avsändare",
+      "detail": "Gammal signatur avvisas; korrekt anrop visas som Alice."
+    },
+    {
+      "name": "Härdad: grupprättigheter",
+      "detail": "Alice nekas både inträde och direkt sändning till Administrators. Admin släpps in. General fungerar."
+    },
+    {
+      "name": "Härdad: Broadcast nekas",
+      "detail": "Vanlig användare nekas av Admin-policyn före metodens kod."
+    },
+    {
+      "name": "Härdad: Broadcast tillåts",
+      "detail": "Admin når båda sessionerna med ett systemmeddelande."
+    },
+    {
+      "name": "Härdad: XSS",
+      "detail": "Payload visas bokstavligt; inget img-element skapas och ingen dialog öppnas."
+    },
+    {
+      "name": "Härdad: validering",
+      "detail": "3000 tecken ger 500-teckensfel; blank text avvisas."
+    },
+    {
+      "name": "Härdad: 1 MB",
+      "detail": "Transporten stängs; klientens automatiska återanslutning aktiveras."
+    },
+    {
+      "name": "Härdad: rate limiting",
+      "detail": "Ny anslutning: 20 av 30 anrop lyckas, 10 nekas med För många anrop."
+    }
+  ]
+}

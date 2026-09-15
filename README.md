@@ -70,3 +70,5 @@ dotnet run --project kod/03-hardad-hub --launch-profile https
 I 03 loggar du in som exempelvis `Alice`. Namnet `admin` ger administratörsrollen genom en labbstub utan lösenord. Använd ett vanligt och ett privat webbläsarfönster för olika identiteter, eftersom vanliga flikar delar cookie.
 
 Se [labbinstruktioner och felsökning](studentmaterial.md) samt [mer om projekten](kod/README.md).
+
+För verifiering och testkommandon, se [demogranskningen](demogranskning.md).

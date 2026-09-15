@@ -131,3 +131,22 @@ console.table(resultat.map((r, i) => ({
 ```
 
 Använd separata webbläsarprofiler eller ett vanligt och ett privat fönster för Alice och admin i den härdade appen; vanliga flikar delar cookie. Testa även direkt sändning som Alice med `await connection.invoke("SendToGroup", "Administrators", "hej")`: servern ska neka även om du inte först försökt gå med.
+
+
+## Bara mot den härdade hubben: anropa en admin-metod
+
+`Broadcast` finns bara i `03-hardad-hub` och har `[Authorize(Policy = "Admin")]`. SignalR kontrollerar rollen vid varje anrop, innan metoden körs.
+
+```js
+// Inloggad som vanlig användare:
+await connection.invoke("Broadcast", "hej alla");
+// -> Fel: Failed to invoke 'Broadcast' because user is unauthorized.
+```
+
+```js
+// Inloggad som admin (namnet står i appsettings.json under Auth:AdminUsers):
+await connection.invoke("Broadcast", "Servern startar om kl 15.");
+// -> Alla anslutna får en systemrad: "Meddelande från admin: Servern startar om kl 15."
+```
+
+Jämför med attack 1: där valde klienten namnet Administrator. Här avgör servern rollen, ur sin egen lista, och attributet stoppar anropet innan en rad av metoden körts.

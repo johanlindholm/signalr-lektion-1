@@ -9,6 +9,8 @@ Labbarna är frivilliga övningar. Välj själv hur mycket du vill göra och om 
 
 Försök gärna själv och jämför sedan med facit: `02-svag-hub` för lab 1, [attacksnuttarna med förväntade resultat](kod/attacker/attacker.md) för lab 2 och `03-hardad-hub` för lab 3. Avsnitten ”Klar när” hjälper dig att kontrollera din lösning. Om du gör alla labbar bygger de vidare på varandra i ordning.
 
+Allt material ligger på GitHub: [github.com/johanlindholm/signalr-lektion-1](https://github.com/johanlindholm/signalr-lektion-1). Klona repot eller [ladda ned det som zip](https://github.com/johanlindholm/signalr-lektion-1/archive/refs/heads/main.zip). Börja med [README](https://github.com/johanlindholm/signalr-lektion-1#readme), sedan `kod/01-start`. Attacksnuttarna till lab 2 ligger i [kod/attacker/attacker.md](https://github.com/johanlindholm/signalr-lektion-1/blob/main/kod/attacker/attacker.md).
+
 Det här är kursens första pass. Termer som TLS, XSS och spoofing dyker upp idag, men de får sin riktiga genomgång i pass 3 (IT-säkerhet och krypto) och pass 5 (säker kommunikation). Idag räcker det att se vad som händer. Begreppslistan sist i dokumentet har korta förklaringar.
 
 ## Dagens röda tråd
@@ -22,7 +24,7 @@ Dagens fråga: hur får en server ut information till en klient i samma stund so
 | SSE | Servern pushar till den som öppnat strömmen | Vem får öppna, och vad får den se |
 | WebSocket | Klienten kan skicka vad som helst, när som helst | Kontroll per meddelande, i vår kod |
 | SignalR | Ramverket sköter transport och routing | Behörighet är vår sak, inte ramverkets |
-| Hub | Argumenten är klientens ord, Context är serverns | Identitet från Context, validera argumenten |
+| Hub | Argumenten är klientens ord, `Context.User` är serverns | Identitet från `Context.User`, validera argumenten |
 | Säkerhet | Kryptering skyddar vägen, inte besluten | Vem, vad, till vem, hur mycket, hur ofta |
 
 Svaret är nästan alltid detsamma: servern litar på det den själv vet, inte på det klienten säger. Ställ frågan varje gång du skriver en metod som en klient kan anropa.
@@ -180,7 +182,7 @@ Titta i tabellen sist i det här dokumentet. Kommer du ändå inte vidare, jämf
 
 Nu vänder du verktygen mot din egen kod. Öppna appen i två flikar, öppna konsolen (F12, fliken Console). Anslutningen ligger i `window.connection`. Hann du inte med steg 1.8, kör i stället mot `02-svag-hub`, som har samma hål.
 
-Snuttarna finns i [attacker.md](kod/attacker/attacker.md), numrerade som på slide 27. Kör dem en i taget mot din lokala app. För varje attack, skriv ner tre rader:
+Snuttarna finns i [attacker.md](kod/attacker/attacker.md), numrerade som på slide 27. Kör rätt variant för svag respektive härdad hub, ett kodblock i taget. För varje attack, skriv ner tre rader:
 
 ```text
 Vad jag som angripare skickade eller gjorde
@@ -206,14 +208,47 @@ Notera särskilt skillnaden i attack 4. Den ena går rakt igenom, den andra stop
 
 Nu täpper du till hålen du hittade. Gör dem i ordning. Efter varje fix, kör om motsvarande attack och kontrollera att den nu stoppas.
 
-Fortsätt i din egen kod från lab 1, eller i en egen kopia av 02 om du använde reservprojektet. Stegen nedan följer de sju raderna på slide 30.
+Fortsätt i din egen kod från lab 1, eller i en egen kopia av 02 om du använde reservprojektet. Stegen följer slide 30.
 
-1. Identitet från servern. Ta bort `username`-argumentet från `SendMessage`. Hämta i stället namnet från serverns kontext. Det förutsätter att användaren är inloggad. Titta i referenslösningen på hur en enkel inloggning sätter upp identiteten.
+### Karta: vilken attack varje fix stoppar, och var den sitter
+
+| Fix | Stoppar attack | Fil(er) i din kod | Vad du lägger till |
+|---|---|---|---|
+| 1. Identitet från servern | 1 (spoofing) | `Program.cs`, `ChatHub.cs`, `app.js` | inloggning som sätter en cookie, `[Authorize]` på hubben, namnet från `Context.User`, och klienten loggar in före `connection.start()` |
+| 2. Rätt mottagare | ingen av de fem, men fel mottagare är en läcka | `ChatHub.cs` | `Clients.Caller`, `Others`, `User`, `Group` där `All` är fel |
+| 3. Grupprättigheter på servern | 2 (fel grupp) | ny klass, `ChatHub.cs` | en regel om vem som får vara i vilken grupp, och `throw new HubException(...)` när svaret är nej |
+| 4. Kontroll vid varje operation | 2 (skicka till gruppen) | `ChatHub.cs` | samma kontroll i `SendToGroup` som i `JoinGroup` |
+| 5. Domänvalidering | 4 (3000 tecken) | `ChatHub.cs` | tomt eller över 500 tecken nekas. Sätt gärna även `MaximumReceiveMessageSize` i `Program.cs` |
+| 6. Rate limiting | 5 (spam) | ny klass, `ChatHub.cs` | en räknare per anslutning, kontrolleras först i varje metod |
+| 7. Säker rendering | 3 (XSS) | `app.js` | `textContent` i stället för `innerHTML` |
+
+### Så nekar du ett anrop
+
+Svaret är `throw new HubException("Du har inte behörighet till den gruppen.")`. Texten i en `HubException` skickas till klienten och hamnar i `catch` runt `connection.invoke(...)`. Andra exceptions döljs: klienten får bara "An unexpected error occurred" och detaljerna hamnar i serverns logg. Under utveckling kan du slå på `EnableDetailedErrors` i `AddSignalR(...)` för att se dem, men stäng av det i produktion, det läcker interna detaljer. Regel: fel som användaren ska se kastas som `HubException`, allt annat loggas.
+
+1. Identitet från servern. Ta bort `username`-argumentet från `SendMessage`. Hämta i stället namnet från `Context.User`. Det förutsätter att användaren är inloggad. Titta i referenslösningen på hur en enkel inloggning sätter upp identiteten. Observera att den inloggningen är en labbstub utan lösenord: den visar hur hubben använder identiteten, inte hur man verifierar vem någon är.
+
+   Så här hänger det ihop i referensen. Hubben läser aldrig cookien själv, den får `Context.User` färdigt:
+
+   ```mermaid
+   sequenceDiagram
+       participant B as Webbläsaren (app.js)
+       participant S as Servern
+       B->>S: POST /dev-login { name }
+       S-->>B: Set-Cookie chat.auth (claims: NameIdentifier, Name, Role)
+       B->>S: POST /hubs/chat/negotiate + cookie
+       Note over S: [Authorize] på hubben: inloggad?
+       S-->>B: 200 connectionId, eller 401 utan cookie
+       B->>S: GET /hubs/chat Upgrade + cookie
+       S-->>B: 101, sedan Context.User i varje anrop
+   ```
+
+   Två saker som brukar gå fel: klienten måste logga in före `connection.start()`, annars finns ingen cookie vid negotiate och du får `Failed to complete negotiation with the server: Unauthorized: Status code '401'`. Och en skyddad hub-endpoint ska svara 401 när inloggning saknas, inte skicka en 302 till en inloggningssida, annars får SignalR-klienten HTML tillbaka och felet blir obegripligt. Referensen gör det med `OnRedirectToLogin` i `Program.cs`.
 2. Rätt mottagare. Fråga dig om varje meddelande verkligen ska gå till alla. Lär dig skillnaden mellan `Clients.All`, `Clients.Caller`, `Clients.Others`, `Clients.User` och `Clients.Group`.
 3. Grupprättigheter på servern. Låt inte klienten bestämma vilken grupp den får gå med i. Lägg kontrollen på servern.
 4. Kontroll vid varje känslig operation. Kontrollera behörigheten både när man går med i en grupp och när man skickar till den. En anslutning lever länge och rättigheter kan ändras.
 5. Domänvalidering. Avvisa tomma meddelanden och meddelanden över 500 tecken. Sätt också SignalR:s `MaximumReceiveMessageSize` till `4 * 1024` byte. Visa skillnaden mellan verksamhetsregeln och det tekniska taket.
-6. Rate limiting. Hindra obegränsat spam: referensen tillåter 20 anrop per 10 sekunder och anslutning. Det är ett enkelt labbexempel, som på slide 30.
+6. Rate limiting. Referensen tillåter 20 anrop per 10 sekunder och anslutning. Hindra obegränsat spam och jämför med 30-anropssnutten för härdad hub.
 7. Säker rendering. Byt ut osäker DOM-rendering i klienten så att inkommande text visas som text, inte som HTML.
 
 När du tar bort `username` från hubmetoderna måste du också ändra klientens `invoke`-anrop. Använd varianterna märkta Härdad hub i attackfilen. Ett fel om fel antal argument visar inte att längdregeln eller rate limiting fungerar.
@@ -232,16 +267,40 @@ Referenslösningen `03-hardad-hub` visar en möjlig väg. Den är inte en färdi
 
 ## Stretch, om du blir klar
 
-- Låt servern skicka själv med [ClockService-övningen](fordjupning-clockservice.md), som på slide 35. Frivilligt, med kodförslag och egen kontroll.
+Se också [ClockService-övningen med egen kontroll](fordjupning-clockservice.md), som använder samma serverpush som slide 37. Koden nedan gäller den otypade hubben i 01/02; länken visar även varianten för 03. Registrera tjänsten före `builder.Build()`.
+
+- Låt servern pusha själv. Allt i chatten hittills startar med att en klient anropar. Lägg in en bakgrundstjänst som skickar till alla var tionde sekund utan att någon klient gjort något. `IHubContext<ChatHub>` är samma `Clients` och `Groups` som i hubben, men utan `Context` och `Caller`, för ingen har anropat.
+
+  ```csharp
+  // ClockService.cs
+  using Microsoft.AspNetCore.SignalR;
+
+  public sealed class ClockService(IHubContext<ChatHub> hub) : BackgroundService
+  {
+      protected override async Task ExecuteAsync(CancellationToken ct)
+      {
+          while (!ct.IsCancellationRequested)
+          {
+              await hub.Clients.All.SendAsync("ReceiveSystem", $"Klockan är {DateTime.Now:HH:mm:ss}", ct);
+              await Task.Delay(TimeSpan.FromSeconds(10), ct);
+          }
+      }
+  }
+
+  // Program.cs, efter AddSignalR():
+  builder.Services.AddHostedService<ClockService>();
+  ```
+
+  Fråga att svara på när det tickar: om du i stället lägger utskicket i en endpoint `POST /alerts`, vem får anropa den, och var sitter kontrollen?
 - Bygg privata meddelanden med `Clients.User`. Se `SendPrivate` i referenslösningen.
-- Logga in som `admin` i referenslösningen och jämför med en vanlig användare. Vem släpps in i gruppen Administrators, och var bestäms det?
+- Logga in som `admin` i referenslösningen och jämför med en vanlig användare. Vem släpps in i gruppen Administrators, och var bestäms det? Kör sedan `connection.invoke("Broadcast", "hej")` från konsolen som vanlig användare och som admin. Metoden har `[Authorize(Policy = "Admin")]`. Hitta var policyn definieras och var rollen sätts. Vad är skillnaden mot kontrollen i `JoinGroup`? (Ledtråd: vår Admin-policy kontrollerar rollen; GroupPolicy använder också gruppnamnet.)
 - Läs kommentaren längst ner i `Program.cs` i referenslösningen och skriv en egen lista över vad som återstår innan något liknande får gå i produktion.
 
 ---
 
 ## Exit ticket
 
-[Exit ticket är en egen uppgift med facit](exit-ticket.md). Du kan göra den oberoende av labbarna och rätta själv, tillsammans med andra eller med hjälp av AI. Ingen inlämning eller lärarrättning.
+[Exit ticket är en egen uppgift med facit](exit-ticket.md). Gör den oberoende av labbarna och rätta själv, tillsammans med andra eller med AI. Ingen inlämning eller lärarrättning.
 
 ---
 
@@ -277,6 +336,6 @@ Referenslösningen `03-hardad-hub` visar en möjlig väg. Den är inte en färdi
 | XSS | När text från en användare körs som kod i en annan användares webbläsare, till exempel via innerHTML. Mer i pass 3 |
 | Spoofing | Att utge sig för att vara någon annan, till exempel genom att skicka ett annat användarnamn. Mer i pass 3 |
 | Rate limiting | Gräns för hur många anrop en klient får göra per tidsenhet |
-| Trust boundary | Gränsen mellan det servern litar på och det den inte litar på. I vår app går den vid hubben |
+| Trust boundary | Gränsen mellan det servern litar på och det den inte litar på. Den går mellan klienten och servern, och i vår app är det hubben som fattar besluten |
 | Source | Var angriparkontrollerad data kommer in |
 | Sink | Där datan används på ett sätt som kan skapa en risk |

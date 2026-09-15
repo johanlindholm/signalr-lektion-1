@@ -5,7 +5,14 @@
 //
 // SignalR ingår i ASP.NET Core (Microsoft.AspNetCore.App). Inget NuGet-paket behövs.
 
+using Microsoft.AspNetCore.Server.Kestrel.Core;
 var builder = WebApplication.CreateBuilder(args);
+
+// Kestrel kör HTTP/2 över https som standard, och då etableras WebSocket på ett annat sätt
+// (RFC 8441, ingen "101 Switching Protocols", Network-fliken visar 200). Vi låser till HTTP/1.1
+// så att handshaken från lektionen syns som den är. Ta bort raden i ett riktigt system.
+builder.WebHost.ConfigureKestrel(kestrel =>
+    kestrel.ConfigureEndpointDefaults(endpoint => endpoint.Protocols = HttpProtocols.Http1));
 
 // TODO 1.1: Registrera SignalR:s tjänster i DI-containern.
 //           Ledtråd: en rad, börjar med builder.Services.
