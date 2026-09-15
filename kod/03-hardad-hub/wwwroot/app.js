@@ -77,8 +77,31 @@ async function invoke(method, ...args) {
         return true;
     } catch (err) {
         addMessage(null, `Fel: ${err.message}`, "error");
+
+        // En HubException bär bara text. Servern skriver antalet sekunder i meddelandet,
+        // så vi läser ut det och pausar skickaknapparna så länge. Ett större system skulle
+        // skicka en felkod och ett tal i stället för att klienten tolkar text.
+        const retry = err.message.match(/Försök igen om (\d+) sekunder/);
+        if (retry) pauseSending(Number(retry[1]));
+
         return false;
     }
+}
+
+let resumeTimer;
+
+function pauseSending(seconds) {
+    const buttons = document.querySelectorAll("#send-form button, #group-form button, #private-form button");
+    buttons.forEach(b => b.disabled = true);
+
+    clearTimeout(resumeTimer);
+    resumeTimer = setTimeout(() => {
+        // Återaktivera bara om vi fortfarande är anslutna.
+        if (connection.state === signalR.HubConnectionState.Connected) {
+            buttons.forEach(b => b.disabled = false);
+            addMessage(null, "Du kan skicka igen.", "system");
+        }
+    }, seconds * 1000);
 }
 
 loginForm.addEventListener("submit", async (event) => {

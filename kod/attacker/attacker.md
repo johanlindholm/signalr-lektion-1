@@ -116,10 +116,10 @@ for (let i = 0; i < 1000; i++) {
 ```
 
 Svag hub: inget stoppar det. Alla anslutna klienter översköljs.
-Härdad hub: efter ett tjugotal anrop på tio sekunder svarar servern "För många anrop".
+Härdad hub: efter 20 anrop på tio sekunder svarar servern "För många anrop. Försök igen om N sekunder." och klienten pausar skickaknapparna så länge. Gränsen gäller per användare, så en ny anslutning eller en ny flik ger ingen ny kvot.
 
 ```js
-// Härdad hub: kör på en ny anslutning. Fånga felen så de blir läsbara.
+// Härdad hub: vänta minst tio sekunder efter tidigare anrop. Fånga felen så de blir läsbara.
 const resultat = await Promise.allSettled(
     Array.from({ length: 30 }, (_, i) =>
         connection.invoke("SendMessage", "spam " + i))

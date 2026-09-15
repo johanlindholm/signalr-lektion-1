@@ -191,13 +191,14 @@ async function checkWeakRestart(ctx,a) {
   assert.equal(await invoke(admin,'SendToGroup','General','Gruppen efter återinträde'),'OK');
   await alice.getByText('[General] admin: Gruppen efter återinträde',{exact:true}).waitFor();
   pass('Härdad: reconnect och grupper','Ny connectionId efter 1 MB; General når Alice först när hon gått med igen.');
-  await login(alice,'Alice');
+  // Gränsen gäller per användare. Alice har redan gjort anrop i samma tidsfönster, därför en ny användare.
+  await login(alice,'Spammare');
   const rates = await alice.evaluate(async()=>{
     const r=await Promise.allSettled(Array.from({length:30},(_,i)=>connection.invoke('SendMessage','spam '+i)));
     return {ok:r.filter(x=>x.status==='fulfilled').length,errors:r.filter(x=>x.status==='rejected').map(x=>x.reason.message)};
   });
   assert.equal(rates.ok,20); assert.equal(rates.errors.length,10); assert(rates.errors.every(e=>e.includes('För många anrop')));
-  pass('Härdad: rate limiting','Ny anslutning: 20 av 30 anrop lyckas, 10 nekas med För många anrop.');
+  pass('Härdad: rate limiting','Ny användare: 20 av 30 anrop lyckas, 10 nekas med För många anrop.');
   await login(alice,'Alice');
   const secondContext = await browser.newContext();
   const observerContext = await browser.newContext();

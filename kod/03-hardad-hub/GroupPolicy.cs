@@ -13,11 +13,16 @@ public sealed class GroupPolicy
         ["Administrators"] = ["Admin"],
     };
 
-    public IEnumerable<string> KnownGroups => RequiredRoles.Keys;
-
-    public bool MayAccess(ClaimsPrincipal user, string groupName)
+    public bool MayAccess(ClaimsPrincipal user, string? groupName)
     {
         if (user.Identity?.IsAuthenticated != true)
+        {
+            return false;
+        }
+
+        // Klienten kan skicka null. Utan kontrollen kastar Dictionary ett ArgumentNullException,
+        // och klienten får ett obegripligt "unexpected error" i stället för ett nej.
+        if (string.IsNullOrEmpty(groupName))
         {
             return false;
         }

@@ -52,9 +52,16 @@ builder.Services.AddSignalR(options =>
 });
 
 builder.Services.AddSingleton<GroupPolicy>();
+
+// Singleton är ett krav, inte en smaksak. Limitern håller räknarna i minnet. Som scoped eller
+// transient skulle varje hubbanrop få en ny, tom limiter, och gränsen skulle aldrig nås.
 builder.Services.AddSingleton<InvocationRateLimiter>();
 
 var app = builder.Build();
+
+// Skapa limitern direkt vid start. Konstruktorn validerar RateLimit-inställningarna, och en felaktig
+// inställning ska stoppa appen nu, inte först vid första hubbanropet.
+app.Services.GetRequiredService<InvocationRateLimiter>();
 
 app.UseDefaultFiles();
 app.UseStaticFiles();
@@ -116,7 +123,7 @@ app.Run();
 //   - riktig inloggning med lösenordsverifiering eller extern IdP, och CSRF-skydd för inloggningen
 //   - Cookie.SecurePolicy = Always och HTTPS överallt
 //   - CORS/Origin-kontroll om klienten ligger på en annan origin
-//   - rate limiting per användare och per IP, inte bara per anslutning
+//   - rate limiting även per IP, delad mellan serverinstanser (se InvocationRateLimiter.cs)
 //   - gränser för antal samtidiga anslutningar
 //   - strukturerad loggning och larm vid nekade anrop
 //   - persistens av meddelanden och hantering av reconnect på serversidan

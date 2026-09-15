@@ -8,7 +8,7 @@ using Microsoft.AspNetCore.SignalR;
 //   - Varje känslig operation kontrolleras när den utförs, inte bara vid anslutning.
 //   - Klientens input valideras mot en domänregel (max 500 tecken), inte bara mot en teknisk gräns.
 //   - Servern äger regeln om vem som får vara i vilken grupp.
-//   - Anrop rate-limitas per connection.
+//   - Anrop rate-limitas per användare. Klienten får veta hur länge den ska vänta.
 //   - Fel som klienten ska få se kastas som HubException. Allt annat loggas på servern.
 
 [Authorize]
@@ -40,7 +40,15 @@ public sealed class ChatHub : Hub<IChatClient>
 
     public override Task OnDisconnectedAsync(Exception? exception)
     {
-        _limiter.Forget(Context.ConnectionId);
+        // Räknaren för en connectionId kan tas bort direkt, samma id kommer aldrig tillbaka.
+        // Räknaren för en användare tar vi INTE bort här. Annars kunde en spammare nollställa
+        // sin gräns genom att koppla ner och ansluta igen. Den städas bort när fönstret löpt ut.
+        // Hubben kräver inloggning, så i praktiken är nyckeln alltid användaren.
+        if (Context.UserIdentifier is null)
+        {
+            _limiter.Forget(RateLimitKey);
+        }
+
         _logger.LogInformation("Frånkopplad: {User} ({ConnectionId})", UserName, Context.ConnectionId);
         return base.OnDisconnectedAsync(exception);
     }
@@ -119,15 +127,29 @@ public sealed class ChatHub : Hub<IChatClient>
         await Clients.Caller.ReceivePrivateMessage($"{UserName} till {toUser}", text);
     }
 
+    // Vem räknas anropen mot? Här syns valet, och därmed bristen.
+    //   - Per anslutning räcker inte: en angripare öppnar bara fler anslutningar och får en ny kvot för varje.
+    //   - Per användare (Context.UserIdentifier, från ClaimTypes.NameIdentifier) delas kvoten av alla
+    //     användarens flikar och anslutningar. Det är vad vi gör när användaren är inloggad.
+    //   - Per IP skulle också begränsa den som skapar många konton. Det har vi inte här.
+    // Prefixen gör att ett användarnamn aldrig kan krocka med en connectionId.
+    private string RateLimitKey => Context.UserIdentifier is { } userId
+        ? $"user:{userId}"
+        : $"connection:{Context.ConnectionId}";
+
     private void EnforceRateLimit()
     {
-        if (_limiter.TryAcquire(Context.ConnectionId))
+        var result = _limiter.TryAcquire(RateLimitKey);
+        if (result.Allowed)
         {
             return;
         }
 
+        // Avrunda uppåt, så att klienten aldrig försöker för tidigt.
+        var seconds = (int)Math.Ceiling(result.RetryAfter.TotalSeconds);
+
         _logger.LogWarning("Rate limit nådd för {User} ({ConnectionId})", UserName, Context.ConnectionId);
-        throw new HubException("För många anrop. Vänta en stund.");
+        throw new HubException($"För många anrop. Försök igen om {seconds} sekunder.");
     }
 
     private static string ValidateMessage(string? message)

@@ -219,7 +219,7 @@ Fortsätt i din egen kod från lab 1, eller i en egen kopia av 02 om du använde
 | 3. Grupprättigheter på servern | 2 (fel grupp) | ny klass, `ChatHub.cs` | en regel om vem som får vara i vilken grupp, och `throw new HubException(...)` när svaret är nej |
 | 4. Kontroll vid varje operation | 2 (skicka till gruppen) | `ChatHub.cs` | samma kontroll i `SendToGroup` som i `JoinGroup` |
 | 5. Domänvalidering | 4 (3000 tecken) | `ChatHub.cs` | tomt eller över 500 tecken nekas. Sätt gärna även `MaximumReceiveMessageSize` i `Program.cs` |
-| 6. Rate limiting | 5 (spam) | ny klass, `ChatHub.cs` | en räknare per anslutning, kontrolleras först i varje metod |
+| 6. Rate limiting | 5 (spam) | ny klass, `ChatHub.cs` | en räknare per användare (singleton), kontrolleras först i varje metod |
 | 7. Säker rendering | 3 (XSS) | `app.js` | `textContent` i stället för `innerHTML` |
 
 ### Så nekar du ett anrop
@@ -248,7 +248,7 @@ Svaret är `throw new HubException("Du har inte behörighet till den gruppen.")`
 3. Grupprättigheter på servern. Låt inte klienten bestämma vilken grupp den får gå med i. Lägg kontrollen på servern.
 4. Kontroll vid varje känslig operation. Kontrollera behörigheten både när man går med i en grupp och när man skickar till den. En anslutning lever länge och rättigheter kan ändras.
 5. Domänvalidering. Avvisa tomma meddelanden och meddelanden över 500 tecken. Sätt också SignalR:s `MaximumReceiveMessageSize` till `4 * 1024` byte. Visa skillnaden mellan verksamhetsregeln och det tekniska taket.
-6. Rate limiting. Referensen tillåter 20 anrop per 10 sekunder och anslutning. Hindra obegränsat spam och jämför med 30-anropssnutten för härdad hub.
+6. Rate limiting. Referensen tillåter 20 anrop per 10 sekunder och användare, och talar om för klienten hur länge den ska vänta. Hindra obegränsat spam och jämför med 30-anropssnutten för härdad hub. Läs kommentarerna i `InvocationRateLimiter.cs` om varför klassen måste vara singleton och vilka begränsningar den har.
 7. Säker rendering. Byt ut osäker DOM-rendering i klienten så att inkommande text visas som text, inte som HTML.
 
 När du tar bort `username` från hubmetoderna måste du också ändra klientens `invoke`-anrop. Använd varianterna märkta Härdad hub i attackfilen. Ett fel om fel antal argument visar inte att längdregeln eller rate limiting fungerar.
